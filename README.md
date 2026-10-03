@@ -44,6 +44,8 @@ CMYK:
 **This fork is currently in active development and has been tested on actual hardware.**
 
 - **Use at Your Own Risk**: As with any slicer fork, please review critical prints and generated G-code before production use
+- **AI-Assisted Development**: The modifications in this repository—specifically the Bambu Lab H2C profile backport, bed 3D model (`bbl-3dp-H2C.stl`) origin centering, and GitHub Actions CI build adjustments—were created and integrated with the assistance of AI (Google Gemini via OpenCode).
+- **Printer Profile Sources**: The Bambu Lab H2C printer, filament, and process profiles integrated into this fork originate from upstream [SoftFever/OrcaSlicer](https://github.com/SoftFever/OrcaSlicer) (commit `15412cd8128157b3383cebd2cf184059a0e9457f` / July 2026) and were cross-referenced against Bambu Studio (`model_id`: `O1C2`). The bed model was subsequently re-centered to $(0, 0, 0)$ to match OrcaSlicer's coordinate system.
 
 </div>
 
