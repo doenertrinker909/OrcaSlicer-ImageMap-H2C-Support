@@ -12,7 +12,7 @@ on:
       build_linux:
         description: 'Build Linux AppImage artifacts'
         type: boolean
-        default: true
+        default: false
       build_flatpak:
         description: 'Build Linux Flatpak artifacts'
         type: boolean
@@ -24,7 +24,7 @@ on:
       build_windows_installer:
         description: 'Build Windows installer'
         type: boolean
-        default: false
+        default: true
       build_without_pch_windows:
         description: 'Build without PCH (windows)'
         type: boolean
@@ -32,7 +32,7 @@ on:
       build_macos:
         description: 'Build macOS artifacts'
         type: boolean
-        default: true
+        default: false
       build_macos_x86_64:
         description: 'Build macOS x86_64 and universal artifacts'
         type: boolean
