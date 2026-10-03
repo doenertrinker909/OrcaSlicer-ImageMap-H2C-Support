@@ -386,9 +386,10 @@ jobs:
 
       - name: Create installer Win
         if: runner.os == 'Windows' && !vars.SELF_HOSTED && inputs.build_windows_installer
+        continue-on-error: true
         working-directory: ${{ github.workspace }}/build
         run: |
-          cpack -G NSIS
+          cpack -C Release -G NSIS
 
       - name: Pack app
         if: runner.os == 'Windows'

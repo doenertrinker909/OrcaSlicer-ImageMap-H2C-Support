@@ -24,7 +24,7 @@ on:
       build_windows_installer:
         description: 'Build Windows installer'
         type: boolean
-        default: true
+        default: false
       build_without_pch_windows:
         description: 'Build without PCH (windows)'
         type: boolean
