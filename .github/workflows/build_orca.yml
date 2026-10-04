@@ -175,19 +175,44 @@ jobs:
         if: runner.os == 'macOS' && !inputs.macos-combine-only && inputs.arch == 'arm64'
         working-directory: ${{ github.workspace }}
         run: |
+          create_dmg() {
+            local vol="$1"
+            local src="$2"
+            local out="$3"
+            hdiutil detach "/Volumes/$vol" -force 2>/dev/null || true
+            sync
+            local success=0
+            for attempt in 1 2 3 4 5; do
+              if hdiutil create -volname "$vol" -srcfolder "$src" -ov -format UDZO "$out"; then
+                success=1
+                break
+              fi
+              rm -f "$out"
+              hdiutil detach "/Volumes/$vol" -force 2>/dev/null || true
+              sleep $((attempt * 5))
+              sync
+            done
+            if [ "$success" -ne 1 ]; then
+              echo "Error: Failed to create DMG $out after 5 attempts" >&2
+              exit 1
+            fi
+          }
+
           mkdir -p ${{ github.workspace }}/build/${{ inputs.arch }}/OrcaSlicer_dmg
           rm -rf ${{ github.workspace }}/build/${{ inputs.arch }}/OrcaSlicer_dmg/*
           cp -R ${{ github.workspace }}/build/${{ inputs.arch }}/OrcaSlicer/OrcaSlicer.app ${{ github.workspace }}/build/${{ inputs.arch }}/OrcaSlicer_dmg/OrcaSlicer-ImageMap.app
           test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' ${{ github.workspace }}/build/${{ inputs.arch }}/OrcaSlicer_dmg/OrcaSlicer-ImageMap.app/Contents/Info.plist)" = "com.orcaslicer.OrcaSlicer.ImageMap"
           ln -sfn /Applications ${{ github.workspace }}/build/${{ inputs.arch }}/OrcaSlicer_dmg/Applications
-          hdiutil create -volname "OrcaSlicer-ImageMap" -srcfolder ${{ github.workspace }}/build/${{ inputs.arch }}/OrcaSlicer_dmg -ov -format UDZO OrcaSlicer-ImageMap_Mac_${{ inputs.arch }}_${{ env.ver }}.dmg
+          touch ${{ github.workspace }}/build/${{ inputs.arch }}/OrcaSlicer_dmg/.metadata_never_index
+          create_dmg "OrcaSlicer-ImageMap" "${{ github.workspace }}/build/${{ inputs.arch }}/OrcaSlicer_dmg" "OrcaSlicer-ImageMap_Mac_${{ inputs.arch }}_${{ env.ver }}.dmg"
 
           if [ -f "${{ github.workspace }}/build/${{ inputs.arch }}/OrcaSlicer/OrcaSlicer_profile_validator.app/Contents/MacOS/OrcaSlicer_profile_validator" ]; then
             mkdir -p ${{ github.workspace }}/build/${{ inputs.arch }}/OrcaSlicer_profile_validator_dmg
             rm -rf ${{ github.workspace }}/build/${{ inputs.arch }}/OrcaSlicer_profile_validator_dmg/*
             cp -R ${{ github.workspace }}/build/${{ inputs.arch }}/OrcaSlicer/OrcaSlicer_profile_validator.app ${{ github.workspace }}/build/${{ inputs.arch }}/OrcaSlicer_profile_validator_dmg/
             ln -sfn /Applications ${{ github.workspace }}/build/${{ inputs.arch }}/OrcaSlicer_profile_validator_dmg/Applications
-            hdiutil create -volname "OrcaSlicer Profile Validator" -srcfolder ${{ github.workspace }}/build/${{ inputs.arch }}/OrcaSlicer_profile_validator_dmg -ov -format UDZO OrcaSlicer_profile_validator_Mac_${{ inputs.arch }}_${{ env.ver }}.dmg
+            touch ${{ github.workspace }}/build/${{ inputs.arch }}/OrcaSlicer_profile_validator_dmg/.metadata_never_index
+            create_dmg "OrcaSlicer Profile Validator" "${{ github.workspace }}/build/${{ inputs.arch }}/OrcaSlicer_profile_validator_dmg" "OrcaSlicer_profile_validator_Mac_${{ inputs.arch }}_${{ env.ver }}.dmg"
           fi
 
       - name: Upload macOS arm64 DMG
@@ -297,12 +322,36 @@ jobs:
         if: ${{ runner.os == 'macOS' && inputs.macos-combine-only && !(github.repository == 'OrcaSlicer/OrcaSlicer' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/'))) }}
         working-directory: ${{ github.workspace }}
         run: |
+          create_dmg() {
+            local vol="$1"
+            local src="$2"
+            local out="$3"
+            hdiutil detach "/Volumes/$vol" -force 2>/dev/null || true
+            sync
+            local success=0
+            for attempt in 1 2 3 4 5; do
+              if hdiutil create -volname "$vol" -srcfolder "$src" -ov -format UDZO "$out"; then
+                success=1
+                break
+              fi
+              rm -f "$out"
+              hdiutil detach "/Volumes/$vol" -force 2>/dev/null || true
+              sleep $((attempt * 5))
+              sync
+            done
+            if [ "$success" -ne 1 ]; then
+              echo "Error: Failed to create DMG $out after 5 attempts" >&2
+              exit 1
+            fi
+          }
+
           mkdir -p ${{ github.workspace }}/build/universal/OrcaSlicer_dmg
           rm -rf ${{ github.workspace }}/build/universal/OrcaSlicer_dmg/*
           cp -R ${{ github.workspace }}/build/universal/OrcaSlicer/OrcaSlicer.app ${{ github.workspace }}/build/universal/OrcaSlicer_dmg/OrcaSlicer-ImageMap.app
           test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' ${{ github.workspace }}/build/universal/OrcaSlicer_dmg/OrcaSlicer-ImageMap.app/Contents/Info.plist)" = "com.orcaslicer.OrcaSlicer.ImageMap"
           ln -sfn /Applications ${{ github.workspace }}/build/universal/OrcaSlicer_dmg/Applications
-          hdiutil create -volname "OrcaSlicer-ImageMap" -srcfolder ${{ github.workspace }}/build/universal/OrcaSlicer_dmg -ov -format UDZO OrcaSlicer-ImageMap_Mac_universal_${{ env.ver }}.dmg
+          touch ${{ github.workspace }}/build/universal/OrcaSlicer_dmg/.metadata_never_index
+          create_dmg "OrcaSlicer-ImageMap" "${{ github.workspace }}/build/universal/OrcaSlicer_dmg" "OrcaSlicer-ImageMap_Mac_universal_${{ env.ver }}.dmg"
           
           # Create separate OrcaSlicer_profile_validator DMG if the app exists
           if [ -f "${{ github.workspace }}/build/universal/OrcaSlicer/OrcaSlicer_profile_validator.app/Contents/MacOS/OrcaSlicer_profile_validator" ]; then
@@ -310,7 +359,8 @@ jobs:
             rm -rf ${{ github.workspace }}/build/universal/OrcaSlicer_profile_validator_dmg/*
             cp -R ${{ github.workspace }}/build/universal/OrcaSlicer/OrcaSlicer_profile_validator.app ${{ github.workspace }}/build/universal/OrcaSlicer_profile_validator_dmg/
             ln -sfn /Applications ${{ github.workspace }}/build/universal/OrcaSlicer_profile_validator_dmg/Applications
-            hdiutil create -volname "OrcaSlicer Profile Validator" -srcfolder ${{ github.workspace }}/build/universal/OrcaSlicer_profile_validator_dmg -ov -format UDZO OrcaSlicer_profile_validator_Mac_universal_${{ env.ver }}.dmg
+            touch ${{ github.workspace }}/build/universal/OrcaSlicer_profile_validator_dmg/.metadata_never_index
+            create_dmg "OrcaSlicer Profile Validator" "${{ github.workspace }}/build/universal/OrcaSlicer_profile_validator_dmg" "OrcaSlicer_profile_validator_Mac_universal_${{ env.ver }}.dmg"
           fi
 
       - name: Upload artifacts mac
