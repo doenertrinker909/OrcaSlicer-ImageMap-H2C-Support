@@ -133,29 +133,36 @@ Download the **Windows Portable build**  for your preferred version from the [re
 ## Mac
 
 1. Download the DMG for your computer from the [Releases](https://github.com/sentientstardust-dev/OrcaSlicer-ImageMap/releases)
-2. Drag OrcaSlicer.app to Application folder.
-3. The macos builds in this repository are not signed, so to run you also need to follow the instructions below:
+2. Drag **OrcaSlicer-ImageMap.app** to your Applications folder.
+3. **Troubleshooting macOS Gatekeeper / Quarantine:**
 
-    <details>
-    <summary>Quarantine</summary>
+   Because builds are not notarized with an Apple developer certificate, macOS Gatekeeper may block the app and display:
+   > "OrcaSlicer-ImageMap is damaged and can't be opened. You should move it to the Trash."  
+   > *(German: "OrcaSlicer-ImageMap ist beschädigt und kann nicht geöffnet werden.")*
 
-    - Option 1 (You only need to do this once. After that the app can be opened normally.):
-      - Step 1: Hold _cmd_ and right click the app, from the context menu choose **Open**.
-      - Step 2: A warning window will pop up, click _Open_
+   The app is **NOT** actually damaged. This is Gatekeeper's standard behavior for downloaded, non-notarized applications.
 
-    - Option 2:
-      Execute this command in terminal:
+   #### Definitive Terminal Fix
+   Run the following command in Terminal to clear the quarantine attributes:
+   ```bash
+   xattr -cr /Applications/OrcaSlicer-ImageMap.app
+   ```
+   *(Note: If the app is still located in your Downloads folder, run: `xattr -cr ~/Downloads/OrcaSlicer-ImageMap.app`)*
 
-      ```shell
-      xattr -dr com.apple.quarantine /Applications/OrcaSlicer.app
-      ```
+   #### GUI Alternatives
+   <details>
+   <summary>Alternative GUI Options</summary>
 
-    - Option 3:
-        - Step 1: open the app, a warning window will pop up  
-            ![mac_cant_open](./SoftFever_doc/mac_cant_open.png)
-        - Step 2: in `System Settings` -> `Privacy & Security`, click `Open Anyway`:  
-            ![mac_security_setting](./SoftFever_doc/mac_security_setting.png)
-    </details>
+   - Option 1 (You only need to do this once. After that the app can be opened normally.):
+     - Step 1: Hold _cmd_ and right click **OrcaSlicer-ImageMap.app**, from the context menu choose **Open**.
+     - Step 2: A warning window will pop up, click _Open_.
+
+   - Option 2:
+     - Step 1: Open the app, a warning window will pop up:  
+         ![mac_cant_open](./SoftFever_doc/mac_cant_open.png)
+     - Step 2: In `System Settings` -> `Privacy & Security`, click `Open Anyway`:  
+         ![mac_security_setting](./SoftFever_doc/mac_security_setting.png)
+   </details>
 
 ## Linux
 
