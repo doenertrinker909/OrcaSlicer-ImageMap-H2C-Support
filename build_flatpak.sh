@@ -220,16 +220,15 @@ fi
 
 # Get version information
 echo -e "${YELLOW}Getting version information...${NC}"
-if [[ -f "version.inc" ]]; then
-    VER_PURE=$(grep 'set(SoftFever_VERSION' version.inc | cut -d '"' -f2)
-    VER="V$VER_PURE"
-    DATE=$(date +'%Y%m%d')
-    echo -e "Version: ${GREEN}$VER${NC}"
-    echo -e "Date: ${GREEN}$DATE${NC}"
-else
-    echo -e "${RED}Error: version.inc not found${NC}"
-    exit 1
+if [[ -f "version_number.txt" ]]; then
+    VER_PURE=$(head -n 1 version_number.txt | tr -d "[:space:]")
+elif [[ -f "version.inc" ]]; then
+    VER_PURE=$(grep -oE "[0-9]+\.[0-9]+\.[0-9]+" version.inc | head -n 1)
 fi
+VER="V$VER_PURE"
+DATE=$(date +'%Y%m%d')
+echo -e "Version: ${GREEN}$VER${NC}"
+echo -e "Date: ${GREEN}$DATE${NC}"
 
 # Cleanup build directory if requested
 if [[ "$CLEANUP" == true ]]; then
