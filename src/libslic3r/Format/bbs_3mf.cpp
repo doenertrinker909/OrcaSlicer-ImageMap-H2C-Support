@@ -290,6 +290,10 @@ static constexpr const char *FILAMENT_COLOR_TAG = "color";
 static constexpr const char *FILAMENT_USED_M_TAG = "used_m";
 static constexpr const char *FILAMENT_USED_G_TAG = "used_g";
 static constexpr const char *FILAMENT_TRAY_INFO_ID_TAG     = "tray_info_idx";
+static constexpr const char *FILAMENT_NOZZLE_GROUP_ID_TAG = "group_id";
+static constexpr const char *FILAMENT_NOZZLE_DIAMETER_TAG = "nozzle_diameter";
+static constexpr const char *FILAMENT_NOZZLE_VOLUME_TYPE_TAG = "volume_type";
+static constexpr const char *NOZZLE_TAG = "nozzle";
 static constexpr const char *LAYER_FILAMENT_LISTS_TAG      = "layer_filament_lists";
 static constexpr const char *LAYER_FILAMENT_LIST_TAG       = "layer_filament_list";
 
@@ -9769,18 +9773,59 @@ static void append_triangle_material_data(std::vector<uint8_t> &uv_valid,
                                << "\" />\n";
                 }
 
+                auto get_nozzle_group_id = [&filament_maps](int filament_id) {
+                    if (filament_id >= 0 && filament_id < static_cast<int>(filament_maps.size()) && filament_maps[filament_id] > 0)
+                        return filament_maps[filament_id] - 1;
+                    return 0;
+                };
+                auto get_nozzle_diameter = [nozzle_diameter_option](int nozzle_group_id) {
+                    if (!nozzle_diameter_option || nozzle_diameter_option->values.empty())
+                        return 0.4;
+                    if (nozzle_group_id >= 0 && nozzle_group_id < static_cast<int>(nozzle_diameter_option->values.size()))
+                        return nozzle_diameter_option->values[nozzle_group_id];
+                    return nozzle_diameter_option->values.front();
+                };
+                auto get_nozzle_diameter_str = [&get_nozzle_diameter](int nozzle_group_id) {
+                    std::ostringstream diameter_stream;
+                    diameter_stream << std::defaultfloat << get_nozzle_diameter(nozzle_group_id);
+                    return diameter_stream.str();
+                };
+                auto get_nozzle_volume_type = [nozzle_volume_types](int nozzle_group_id) {
+                    if (nozzle_volume_types.empty())
+                        return std::string("Standard");
+                    int nvt = nozzle_volume_types.front();
+                    if (nozzle_group_id >= 0 && nozzle_group_id < static_cast<int>(nozzle_volume_types.size()))
+                        nvt = nozzle_volume_types[nozzle_group_id];
+                    return (nvt == 1) ? std::string("Hardened") : std::string("Standard");
+                };
+
                 for (auto it = plate_data->slice_filaments_info.begin(); it != plate_data->slice_filaments_info.end(); it++)
                 {
+                    int nozzle_group_id = get_nozzle_group_id(it->id);
+                    double fil_nozzle_diameter = get_nozzle_diameter(nozzle_group_id);
+                    std::string fil_volume_type = get_nozzle_volume_type(nozzle_group_id);
                     stream << "    <" << FILAMENT_TAG << " " << FILAMENT_ID_TAG << "=\"" << std::to_string(it->id + 1) << "\" "
                            << FILAMENT_TRAY_INFO_ID_TAG <<"=\""<< it->filament_id <<"\" "
                            << FILAMENT_TYPE_TAG << "=\"" << it->type << "\" "
                            << FILAMENT_COLOR_TAG << "=\"" << it->color << "\" "
                            << FILAMENT_USED_M_TAG << "=\"" << it->used_m << "\" "
-                           << FILAMENT_USED_G_TAG << "=\"" << it->used_g << "\" />\n";
+                           << FILAMENT_USED_G_TAG << "=\"" << it->used_g << "\" "
+                           << FILAMENT_NOZZLE_GROUP_ID_TAG << "=\"" << std::to_string(nozzle_group_id) << "\" "
+                           << FILAMENT_NOZZLE_DIAMETER_TAG << "=\"" << fil_nozzle_diameter << "\" "
+                           << FILAMENT_NOZZLE_VOLUME_TYPE_TAG << "=\"" << fil_volume_type << "\" />\n";
                 }
 
                 for (auto it = plate_data->warnings.begin(); it != plate_data->warnings.end(); it++) {
                     stream << "    <" << SLICE_WARNING_TAG << " msg=\"" << it->msg << "\" level=\"" << std::to_string(it->level) << "\" error_code =\"" << it->error_code << "\"  />\n";
+                }
+
+                size_t num_extruders = nozzle_diameter_option ? nozzle_diameter_option->values.size() : 1;
+                for (size_t ext_idx = 0; ext_idx < num_extruders; ++ext_idx) {
+                    stream << "    <" << NOZZLE_TAG << " "
+                           << "id=\"" << ext_idx << "\" "
+                           << "extruder_id=\"" << (ext_idx + 1) << "\" "
+                           << "nozzle_diameter=\"" << get_nozzle_diameter_str(ext_idx) << "\" "
+                           << "volume_type=\"" << get_nozzle_volume_type(ext_idx) << "\"/>\n";
                 }
 
                 if (!plate_data->layer_filaments.empty()) {
